@@ -1,0 +1,11 @@
+{
+    "com.pgneri.plugin.custom.camera": {
+        "source": {
+            "type": "git",
+            "url": "https://github.com/pgneri/plugin-camera-custom",
+            "subdir": "."
+        },
+        "is_top_level": true,
+        "variables": {}
+    }
+}
