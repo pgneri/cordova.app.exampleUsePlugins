@@ -24,4 +24,5 @@
         <allow-intent href="itms-apps:*" />
     </platform>
     <plugin name="com.pgneri.plugin.custom.camera" spec="https://github.com/pgneri/plugin-camera-custom" />
+    <engine name="ios" spec="~4.1.1" />
 </widget>
