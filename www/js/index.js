@@ -27,6 +27,7 @@ var app = {
     // 'load', 'deviceready', 'offline', and 'online'.
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
+        document.getElementById('button').addEventListener('click', this.buttonClicked, false);
     },
     // deviceready Event Handler
     //
@@ -34,6 +35,17 @@ var app = {
     // function, we must explicitly call 'app.receivedEvent(...);'
     onDeviceReady: function() {
         app.receivedEvent('deviceready');
+    },
+    buttonClicked: function() {
+        navigator.customCamera.getPicture('foto', function success(base64) {
+            document.getElementById('foto').src = "data:image/jpeg;base64,"+base64;
+        }, function failure(error) {
+            alert(error);
+        }, {
+            quality: 100,
+            targetWidth: 100,
+            targetHeight:100
+        });
     },
     // Update DOM on a Received Event
     receivedEvent: function(id) {
