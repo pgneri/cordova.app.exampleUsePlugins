@@ -7,7 +7,10 @@
 //
 
 #import "CustomCamera.h"
+#import "GlobalVars.h"
 #import "CustomCameraViewController.h"
+#import "ConfirmImageViewController.h"
+
 #define CDV_PHOTO_PREFIX @"cdv_photo_"
 
 static NSString* toBase64(NSData* data) {
@@ -36,7 +39,14 @@ static NSString* toBase64(NSData* data) {
     CGFloat quality = [[command argumentAtIndex:1] floatValue];
     CGFloat targetWidth = [[command argumentAtIndex:2] floatValue];
     CGFloat targetHeight = [[command argumentAtIndex:3] floatValue];
-
+    
+    GlobalVars *globals = [GlobalVars sharedInstance];
+    globals.title = [command argumentAtIndex:4];
+    globals.buttonDone = [command argumentAtIndex:5];
+    globals.buttonRestart = [command argumentAtIndex:6];
+    globals.buttonCancel = [command argumentAtIndex:7];
+    globals.toggleCamera = [command argumentAtIndex:8];
+    
     if (![UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceRear]) {
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"No rear camera detected"];
         [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
@@ -45,6 +55,7 @@ static NSString* toBase64(NSData* data) {
         [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
     } else {
         CustomCameraViewController *cameraViewController = [[CustomCameraViewController alloc] initWithCallback:^(UIImage *image) {
+
             NSString *documentsDirectory = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
 
             NSString* imagePath;
@@ -75,6 +86,10 @@ static NSString* toBase64(NSData* data) {
         }];
         [self.viewController presentViewController:cameraViewController animated:YES completion:nil];
     }
+}
+
+-(void) actionCameraMask{
+    
 }
 
 - (NSString *)encodeToBase64String:(UIImage *)image {

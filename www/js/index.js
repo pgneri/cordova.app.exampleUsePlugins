@@ -37,15 +37,20 @@ var app = {
         app.receivedEvent('deviceready');
     },
     buttonClicked: function() {
-        navigator.customCamera.getPicture('foto', function success(base64) {
+      navigator.customCamera.getPicture(function success(base64) {
             document.getElementById('foto').src = "data:image/jpeg;base64,"+base64;
         }, function failure(error) {
             alert(error);
         }, {
             quality: 100,
             targetWidth: 100,
-            targetHeight:100
-        });
+            targetHeight:100,
+            title:'Posicione seu rosto no centro da tela.',
+            buttonDone:'OK',
+            buttonRestart:'TIRAR OUTRA FOTO',
+            buttonCancel:'Cancelar',
+            toggleCamera: true
+      });
     },
     // Update DOM on a Received Event
     receivedEvent: function(id) {

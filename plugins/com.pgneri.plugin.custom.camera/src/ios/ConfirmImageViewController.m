@@ -6,26 +6,26 @@
 //
 //
 
+#import <Cordova/CDV.h>
+#import <AVFoundation/AVFoundation.h>
+#import "GlobalVars.h"
 #import "ConfirmImageViewController.h"
 
-@interface ConfirmImageViewController ()
-
-@end
-
 @implementation ConfirmImageViewController {
-    void(^_callback)(UIImage*);
+    void(^_callback)(BOOL);
     UIButton *_backButton;
     UIButton *_confirmButton;
     UIImage *_selfie;
+    UIImageView *_imageView;
     UIView *_bottomPanel;
     UIView *_fullPanel;
+    BOOL *_confirmed;
 }
 
-static const CGFloat kCaptureButtonWidthPhone = 64;
 static const CGFloat kCaptureButtonHeightPhone = 64;
 static const CGFloat kCaptureButtonVerticalInsetPhone = 10;
 
-- (id)initWithCallback:(void(^)(UIImage*))callback {
+- (id)initWithCallback:(void(^)(BOOL))callback {
     self = [super initWithNibName:nil bundle:nil];
     
     if (self) {
@@ -48,6 +48,8 @@ static const CGFloat kCaptureButtonVerticalInsetPhone = 10;
 - (void)loadView {
     self.view = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.view.backgroundColor = [UIColor blackColor];
+    
+    [self.view addSubview:[self createOverlay]];
 }
 
 - (CALayer*)createLayerCircle {
@@ -55,7 +57,7 @@ static const CGFloat kCaptureButtonVerticalInsetPhone = 10;
     
     int radius = bounds.size.width;
     UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0, 0, bounds.size.width, bounds.size.height) cornerRadius:0];
-    UIBezierPath *circlePath = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0, (bounds.size.height-bounds.size.width)/2, radius, radius) cornerRadius:radius];
+    UIBezierPath *circlePath = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0, (bounds.size.height-bounds.size.width)/2-kCaptureButtonVerticalInsetPhone*2, radius, radius) cornerRadius:radius];
     [path appendPath:circlePath];
     [path setUsesEvenOddFillRule:YES];
     
@@ -69,30 +71,25 @@ static const CGFloat kCaptureButtonVerticalInsetPhone = 10;
 }
 
 - (UIView*)createOverlay {
+    GlobalVars *globals = [GlobalVars sharedInstance]; // Options plugin
     UIView *overlay = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-
-    _bottomPanel = [[UIView alloc] initWithFrame:CGRectZero];
-    [_bottomPanel setBackgroundColor: [UIColor blackColor]];
-    [overlay addSubview:_bottomPanel];
     
     _backButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    [_backButton setTitle:@"TIRAR OUTRA FOTO" forState:UIControlStateNormal];
-    [_backButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [_backButton setBackgroundColor:[UIColor blackColor]];
-    [[_backButton titleLabel] setFont:[UIFont systemFontOfSize:18]];
-    [_backButton addTarget:self action:@selector(dismissImagePreview) forControlEvents:UIControlEventTouchUpInside];
+    [_backButton setTitle:[NSString stringWithFormat:@"%@", globals.buttonRestart] forState:UIControlStateNormal];
+    [_backButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [_backButton setBackgroundColor:[UIColor whiteColor]];
+    [[_backButton titleLabel] setFont:[UIFont systemFontOfSize:16]];
+    [_backButton addTarget:self action:@selector(restartCamera) forControlEvents:UIControlEventTouchUpInside];
     [overlay addSubview:_backButton];
 
     
     _confirmButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    [_confirmButton setTitle:@"OK" forState:UIControlStateNormal];
-    [_confirmButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [_confirmButton setBackgroundColor:[UIColor blackColor]];
-        [[_confirmButton titleLabel] setFont:[UIFont systemFontOfSize:18]];
+    [_confirmButton setTitle:[NSString stringWithFormat:@"%@", globals.buttonDone] forState:UIControlStateNormal];
+    [_confirmButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [_confirmButton setBackgroundColor:[UIColor whiteColor]];
+        [[_confirmButton titleLabel] setFont:[UIFont systemFontOfSize:16]];
     [_confirmButton addTarget:self action:@selector(confirmImage) forControlEvents:UIControlEventTouchUpInside];
     [overlay addSubview:_confirmButton];
-
-    [self.view.layer addSublayer:[self createLayerCircle]];
     
     return overlay;
 }
@@ -104,23 +101,32 @@ static const CGFloat kCaptureButtonVerticalInsetPhone = 10;
 - (void)layoutForPhone {
     CGRect bounds = [[UIScreen mainScreen] bounds];
     
-    _backButton.frame = CGRectMake((bounds.size.width / 2) - (kCaptureButtonWidthPhone / 2),
-                                      bounds.size.height - kCaptureButtonHeightPhone - kCaptureButtonVerticalInsetPhone,
-                                      kCaptureButtonWidthPhone,
-                                      kCaptureButtonHeightPhone);
+    _backButton.frame = CGRectMake(kCaptureButtonVerticalInsetPhone,
+                                      bounds.size.height - kCaptureButtonHeightPhone,
+                                      bounds.size.width-kCaptureButtonVerticalInsetPhone*2,
+                                      kCaptureButtonHeightPhone - kCaptureButtonVerticalInsetPhone*2);
+    _backButton.layer.cornerRadius = 5;
+    _backButton.clipsToBounds = YES;
+
     
-    _confirmButton.frame = CGRectMake((CGRectGetMinX(_confirmButton.frame) - kCaptureButtonWidthPhone) / 2,
-                                   CGRectGetMinY(_confirmButton.frame) + ((kCaptureButtonHeightPhone - kCaptureButtonHeightPhone) / 2),
-                                   kCaptureButtonWidthPhone,
-                                   kCaptureButtonHeightPhone);
+    _confirmButton.frame = CGRectMake(kCaptureButtonVerticalInsetPhone,
+                                      bounds.size.height - kCaptureButtonHeightPhone - kCaptureButtonHeightPhone + kCaptureButtonVerticalInsetPhone,
+                                      bounds.size.width-kCaptureButtonVerticalInsetPhone*2,
+                                      kCaptureButtonHeightPhone - kCaptureButtonVerticalInsetPhone*2);
+    _confirmButton.layer.cornerRadius = 5;
+    _confirmButton.clipsToBounds = YES;
+    
     
     [self layoutForPhoneWithShortScreen];
 
 }
 
 - (void)confirmImage {
-    
-     _callback(@"");
+    _callback(YES);
+}
+
+- (void)restartCamera {
+    _callback(false);
 }
 
  - (void)layoutForPhoneWithShortScreen {
@@ -128,9 +134,9 @@ static const CGFloat kCaptureButtonVerticalInsetPhone = 10;
      
      CGFloat bottomsize = kCaptureButtonHeightPhone + (kCaptureButtonVerticalInsetPhone * 2);
      
-     _bottomPanel.frame = CGRectMake(0, bounds.size.height/2 + bottomsize/2,
+     _bottomPanel.frame = CGRectMake(0, bounds.size.height/4 + bottomsize/2,
                                      bounds.size.width,
-                                     bounds.size.height/2 - bottomsize);
+                                     bounds.size.height/4- bottomsize);
  }
 
 - (void)layoutForPhoneWithTallScreen {
@@ -138,9 +144,35 @@ static const CGFloat kCaptureButtonVerticalInsetPhone = 10;
     
     CGFloat bottomsize = kCaptureButtonHeightPhone + (kCaptureButtonVerticalInsetPhone * 2);
     
-    _bottomPanel.frame = CGRectMake(0, bounds.size.height/2 + bottomsize/2,
+    _bottomPanel.frame = CGRectMake(0, bounds.size.height/4 + bottomsize/2,
                                     bounds.size.width,
-                                    bounds.size.height/2 - bottomsize);
+                                    bounds.size.height/4- bottomsize);
+}
+
+-(UIImageView *)imageView
+{
+    CGRect bounds = [[UIScreen mainScreen] bounds];
+    int radius = bounds.size.width;
+
+    if( _imageView == nil )
+    {
+        _imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, (bounds.size.height-bounds.size.width)/2-kCaptureButtonVerticalInsetPhone*2, radius, radius)];
+        [self.view addSubview:_imageView];
+    }
+    
+    UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0, 0, bounds.size.width, bounds.size.height-radius/2+kCaptureButtonVerticalInsetPhone*2) cornerRadius:0];
+    UIBezierPath *circlePath = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0, (bounds.size.height-bounds.size.width)/2-kCaptureButtonVerticalInsetPhone*2, radius, radius) cornerRadius:radius];
+    [path appendPath:circlePath];
+    [path setUsesEvenOddFillRule:YES];
+    
+    CAShapeLayer *fillLayer = [CAShapeLayer layer];
+    fillLayer.path = path.CGPath;
+    fillLayer.fillRule = kCAFillRuleEvenOdd;
+    fillLayer.fillColor = [UIColor blackColor].CGColor;
+    fillLayer.opacity = 1;
+    [self.view.layer addSublayer:fillLayer];
+    
+    return _imageView;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -157,18 +189,18 @@ static const CGFloat kCaptureButtonVerticalInsetPhone = 10;
     return YES;
 }
 
-- (NSUInteger)supportedInterfaceOrientations {
+#if __IPHONE_OS_VERSION_MAX_ALLOWED < 90000
+- (NSUInteger)supportedInterfaceOrientations
+#else
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations
+#endif
+{
     return UIInterfaceOrientationMaskPortrait;
 }
 
 - (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
     return UIInterfaceOrientationPortrait;
 }
-
-- (void)dismissImagePreview {
-    [self dismissViewControllerAnimated:YES completion:nil];
-}
-
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)orientation {
     return orientation == UIDeviceOrientationPortrait;

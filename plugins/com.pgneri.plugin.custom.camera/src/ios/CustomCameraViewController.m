@@ -6,11 +6,11 @@
 //
 //
 
-#import "CustomCameraViewController.h"
-
 #import <Cordova/CDV.h>
 #import <AVFoundation/AVFoundation.h>
-
+#import "GlobalVars.h"
+#import "CustomCameraViewController.h"
+#import "ConfirmImageViewController.h"
 
 @implementation CustomCameraViewController {
     void(^_callback)(UIImage*);
@@ -25,6 +25,7 @@
     UIView *_topPanel;
     UIView *_bottomPanel;
     UIView *_fullPanel;
+    UILabel *_topTitle;
 
 }
 
@@ -100,7 +101,7 @@ static const CGFloat kCaptureButtonVerticalInsetTablet = 20;
     CAShapeLayer *fillLayer = [CAShapeLayer layer];
     fillLayer.path = path.CGPath;
     fillLayer.fillRule = kCAFillRuleEvenOdd;
-    fillLayer.fillColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.9].CGColor;
+    fillLayer.fillColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:1].CGColor;
     fillLayer.opacity = 0.9;
 
     return fillLayer;
@@ -128,21 +129,30 @@ static const CGFloat kCaptureButtonVerticalInsetTablet = 20;
 }
 
 - (UIView*)createOverlay {
+    GlobalVars *globals = [GlobalVars sharedInstance]; // Options plugin
     UIView *overlay = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-
-// Button to change Camera (Back - Front) - Comment dismiss to use
-//    _changeCamera = [UIButton buttonWithType:UIButtonTypeCustom];
-//    [_changeCamera setImage:[UIImage imageNamed:@"www/img/icons/camera_toggle.png"] forState:UIControlStateNormal];
-//    [_changeCamera setImage:[UIImage imageNamed:@"www/img/icons/camera_toggle-touched.png"] forState:UIControlStateSelected];
-//    [_changeCamera setImage:[UIImage imageNamed:@"www/img/icons/camera_toggle-touched.png"] forState:UIControlStateHighlighted];
-//    [_changeCamera addTarget:self action:@selector(changeCamera) forControlEvents:UIControlEventTouchUpInside];
-//    [overlay addSubview:_changeCamera];
-
-
+    
+    _topTitle = [[UILabel alloc] initWithFrame:CGRectZero];
+    [_topTitle setBackgroundColor: [UIColor clearColor]];
+    [_topTitle setText:[NSString stringWithFormat:@"%@", globals.title]];
+    [_topTitle setTextColor:[UIColor whiteColor]];
+    [_topTitle setFont:[UIFont systemFontOfSize:16]];
+    [_topTitle setTextAlignment:NSTextAlignmentCenter];
+    [overlay addSubview:_topTitle];
+    
     _buttonPanel = [[UIView alloc] initWithFrame:CGRectZero];
     [_buttonPanel setBackgroundColor: [UIColor blackColor]];
     [overlay addSubview:_buttonPanel];
-
+    
+    if([globals.toggleCamera isEqual:@"YES"]){
+        _changeCamera = [UIButton buttonWithType:UIButtonTypeCustom];
+        [_changeCamera setImage:[UIImage imageNamed:@"www/img/icons/camera_toggle.png"] forState:UIControlStateNormal];
+        [_changeCamera setImage:[UIImage imageNamed:@"www/img/icons/camera_toggle-touched.png"] forState:UIControlStateSelected];
+        [_changeCamera setImage:[UIImage imageNamed:@"www/img/icons/camera_toggle-touched.png"] forState:UIControlStateHighlighted];
+        [_changeCamera addTarget:self action:@selector(changeCamera) forControlEvents:UIControlEventTouchUpInside];
+        [overlay addSubview:_changeCamera];
+    }
+    
     _captureButton = [UIButton buttonWithType:UIButtonTypeCustom];
     [_captureButton setImage:[UIImage imageNamed:@"www/img/icons/input-foto.png"] forState:UIControlStateNormal];
     [_captureButton setImage:[UIImage imageNamed:@"www/img/icons/input-foto.png"] forState:UIControlStateSelected];
@@ -151,17 +161,13 @@ static const CGFloat kCaptureButtonVerticalInsetTablet = 20;
     [overlay addSubview:_captureButton];
 
     _backButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    [_backButton setTitle:@"Cancelar" forState:UIControlStateNormal];
+    [_backButton setTitle:[NSString stringWithFormat:@"%@", globals.buttonCancel] forState:UIControlStateNormal];
     [_backButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [[_backButton titleLabel] setFont:[UIFont systemFontOfSize:18]];
     [_backButton addTarget:self action:@selector(dismissCameraPreview) forControlEvents:UIControlEventTouchUpInside];
     [overlay addSubview:_backButton];
 
-    [self.view addSubview:[self createOverlayFullScreen]];
     [self.view.layer addSublayer:[self createLayerCircle]];
-
-//    [self.view addSubview:[self createOverlayTop]];
-//    [self.view addSubview:[self createOverlayBottom]];
 
     return overlay;
 }
@@ -176,15 +182,19 @@ static const CGFloat kCaptureButtonVerticalInsetTablet = 20;
 
 - (void)layoutForPhone {
     CGRect bounds = [[UIScreen mainScreen] bounds];
-
-    _changeCamera.frame = CGRectMake(bounds.size.width-kChangeCameraButtonWidthPhone,0,
-                                      kChangeCameraButtonWidthPhone,
-                                      kChangeCameraButtonHeightPhone);
-
+    
+    _topTitle.frame = CGRectMake(kCaptureButtonVerticalInsetPhone,0,
+                                 bounds.size.width-kCaptureButtonVerticalInsetPhone*2,
+                                 kChangeCameraButtonHeightPhone);
+    
     _captureButton.frame = CGRectMake((bounds.size.width / 2) - (kCaptureButtonWidthPhone / 2),
                                       bounds.size.height - kCaptureButtonHeightPhone - kCaptureButtonVerticalInsetPhone,
                                       kCaptureButtonWidthPhone,
                                       kCaptureButtonHeightPhone);
+
+    _changeCamera.frame = CGRectMake(bounds.size.width-kChangeCameraButtonWidthPhone-kCaptureButtonVerticalInsetPhone*2, CGRectGetMinY(_captureButton.frame) + ((kCaptureButtonHeightPhone - kChangeCameraButtonHeightPhone) / 2),
+                                      kChangeCameraButtonWidthPhone,
+                                      kChangeCameraButtonHeightPhone);
 
     _backButton.frame = CGRectMake((CGRectGetMinX(_captureButton.frame) - kBackButtonWidthPhone) / 2,
                                    CGRectGetMinY(_captureButton.frame) + ((kCaptureButtonHeightPhone - kBackButtonHeightPhone) / 2),
@@ -238,6 +248,10 @@ static const CGFloat kCaptureButtonVerticalInsetTablet = 20;
 
 - (void)layoutForTablet {
     CGRect bounds = [[UIScreen mainScreen] bounds];
+    
+    _topTitle.frame = CGRectMake(kCaptureButtonVerticalInsetPhone,0,
+                                 bounds.size.width-kCaptureButtonVerticalInsetPhone*2,
+                                 kChangeCameraButtonHeightPhone);
 
     _changeCamera.frame = CGRectMake(bounds.size.width-kChangeCameraButtonWidthTablet,0,
                                      kChangeCameraButtonWidthTablet,
@@ -363,7 +377,12 @@ static const CGFloat kCaptureButtonVerticalInsetTablet = 20;
     return nil;
 }
 
-- (NSUInteger)supportedInterfaceOrientations {
+#if __IPHONE_OS_VERSION_MAX_ALLOWED < 90000
+- (NSUInteger)supportedInterfaceOrientations
+#else
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations
+#endif
+{
     return UIInterfaceOrientationMaskPortrait;
 }
 
@@ -425,8 +444,6 @@ static const CGFloat kCaptureButtonVerticalInsetTablet = 20;
 
         UIImage *imagem = [UIImage imageWithData:imageData];
 
-//        CGFloat heightScale = imagem.size.height/bounds.size.height;
-
         CGRect rect = CGRectMake(0, (imagem.size.height-imagem.size.width) / 2, imagem.size.width, imagem.size.width);
 
         CGAffineTransform rectTransform = [self orientationTransformedRectOfImage:imagem];
@@ -437,10 +454,29 @@ static const CGFloat kCaptureButtonVerticalInsetTablet = 20;
         UIImage *imageCrop = [UIImage imageWithCGImage:imageRef  scale:imagem.scale orientation:imagem.imageOrientation];
 
         CGImageRelease(imageRef);
+        
+        ConfirmImageViewController *confirmImage  = [ConfirmImageViewController alloc];
+        UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:confirmImage];
+        
+        UIImage *image = [UIImage imageWithCGImage:imageRef  scale:imagem.scale orientation:imagem.imageOrientation];
+        confirmImage.imageView.image = image;
+        navController.navigationBarHidden = true;
 
-        _callback(imageCrop);
+        (void) [confirmImage initWithCallback:^(BOOL confirmed) {
+            if(confirmed) {
+                _callback(imageCrop);
+            } else {
+                _captureButton.userInteractionEnabled = YES;
+                _captureButton.selected = NO;
+            }
+            [self dismissViewControllerAnimated:YES completion:nil];
+        }];
+        
+        [self presentViewController:navController animated:YES completion:nil];
+        
     }];
 }
+
 
 - (CGAffineTransform)orientationTransformedRectOfImage:(UIImage *)img
 {
