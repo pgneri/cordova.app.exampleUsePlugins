@@ -7,6 +7,22 @@
         "is_top_level": true,
         "variables": {}
     },
+    "cordova-plugin-dialogs": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-dialogs"
+        },
+        "is_top_level": false,
+        "variables": {}
+    },
+    "cordova-plugin-device": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-device"
+        },
+        "is_top_level": false,
+        "variables": {}
+    },
     "com.pgneri.plugin.custom.camera": {
         "source": {
             "type": "git",
@@ -15,5 +31,24 @@
         },
         "is_top_level": true,
         "variables": {}
+    },
+    "cordova-plugin-compat": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-compat"
+        },
+        "is_top_level": false,
+        "variables": {}
+    },
+    "com.pgneri.plugin.zbarcodescanner": {
+        "source": {
+            "type": "git",
+            "url": "https://github.com/pgneri/plugin-zbarcodescanner",
+            "subdir": "."
+        },
+        "is_top_level": true,
+        "variables": {
+            "CAMERA_USAGE_DESCRIPTION": "To scan barcodes"
+        }
     }
 }

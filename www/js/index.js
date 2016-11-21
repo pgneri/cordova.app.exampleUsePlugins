@@ -27,7 +27,10 @@ var app = {
     // 'load', 'deviceready', 'offline', and 'online'.
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
-        document.getElementById('button').addEventListener('click', this.buttonClicked, false);
+        document.getElementById('buttonCamera').addEventListener('click', this.buttonClickedCamera, false);
+        document.getElementById('buttonScannerQrCode').addEventListener('click', this.buttonClickedScannerQrCode, false);
+        document.getElementById('buttonScannerBarcode').addEventListener('click', this.buttonClickedScannerBarcode, false);
+
     },
     // deviceready Event Handler
     //
@@ -36,22 +39,68 @@ var app = {
     onDeviceReady: function() {
         app.receivedEvent('deviceready');
     },
-    buttonClicked: function() {
+    buttonClickedCamera: function() {
       navigator.customCamera.getPicture(function success(base64) {
-            document.getElementById('foto').src = "data:image/jpeg;base64,"+base64;
+            document.getElementById('photo').src = "data:image/jpeg;base64,"+base64;
         }, function failure(error) {
             alert(error);
         }, {
             quality: 100,
             targetWidth: 100,
             targetHeight:100,
-            title:'Posicione seu rosto no centro da tela.',
+            title:'Title to camera',
             buttonDone:'OK',
-            buttonRestart:'TIRAR OUTRA FOTO',
-            buttonCancel:'Cancelar',
+            buttonRestart:'Take another picture',
+            buttonCancel:'Cancel',
             toggleCamera: true
-      });
+        });
     },
+    buttonClickedScannerQrCode: function() {
+      cordova.plugins.barcodeScanner.scan(
+         function (result) {
+             alert("We got a barcode\n" +
+                   "Result: " + result.text + "\n" +
+                   "Format: " + result.format + "\n" +
+                   "Cancelled: " + result.cancelled);
+         },
+         function (error) {
+            if(error.cancelled!=1){
+              alert("Scanning failed: " + error);
+            }
+         },
+         {
+             "preferFrontCamera" : true, //  Android Only
+             "showFlipCameraButton" : true, //  Android Only
+             "prompt" : "Place a barcode inside the scan area", // supported on Android only
+             "formats" : "QR_CODE,PDF_417", // Android Only
+             "orientation" : "portrait" //  default portrait
+         }
+      );
+    },
+    buttonClickedScannerBarcode: function() {
+      cordova.plugins.barcodeScanner.scan(
+         function (result) {
+             alert("We got a barcode\n" +
+                   "Result: " + result.text + "\n" +
+                   "Format: " + result.format + "\n" +
+                   "Cancelled: " + result.cancelled);
+         },
+         function (error) {
+             if(error.cancelled!=1){
+               alert("Scanning failed: " + error);
+             }
+         },
+         {
+             "preferFrontCamera" : true, //  Android Only
+             "showFlipCameraButton" : true, //  Android Only
+             "prompt" : "Place a barcode inside the scan area", // supported on Android only
+             "formats" : "QR_CODE,PDF_417", // Android Only
+             "orientation" : "landscape", //  default portrait
+             "flash" : "auto" // iOS only
+         }
+      );
+    }
+    ,
     // Update DOM on a Received Event
     receivedEvent: function(id) {
         var parentElement = document.getElementById(id);

@@ -8,11 +8,19 @@
     },
     "installed_plugins": {
         "com.pgneri.plugin.custom.camera": {
-            "PACKAGE_NAME": "com.pgneri.exempleCustomCamera"
+            "PACKAGE_NAME": "com.pgneri.example"
+        },
+        "com.pgneri.plugin.zbarcodescanner": {
+            "CAMERA_USAGE_DESCRIPTION": "To scan barcodes",
+            "PACKAGE_NAME": "com.pgneri.example"
         },
         "cordova-plugin-whitelist": {
-            "PACKAGE_NAME": "com.pgneri.exempleCustomCamera"
+            "PACKAGE_NAME": "com.pgneri.example"
         }
     },
-    "dependent_plugins": {}
+    "dependent_plugins": {
+        "cordova-plugin-compat": {
+            "PACKAGE_NAME": "com.pgneri.example"
+        }
+    }
 }

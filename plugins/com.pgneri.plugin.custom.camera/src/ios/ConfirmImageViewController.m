@@ -160,7 +160,7 @@ static const CGFloat kCaptureButtonVerticalInsetPhone = 10;
         [self.view addSubview:_imageView];
     }
     
-    UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0, 0, bounds.size.width, bounds.size.height-radius/2+kCaptureButtonVerticalInsetPhone*2) cornerRadius:0];
+    UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0, 0, bounds.size.width, bounds.size.height-radius/2+kCaptureButtonVerticalInsetPhone*3) cornerRadius:0];
     UIBezierPath *circlePath = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0, (bounds.size.height-bounds.size.width)/2-kCaptureButtonVerticalInsetPhone*2, radius, radius) cornerRadius:radius];
     [path appendPath:circlePath];
     [path setUsesEvenOddFillRule:YES];
@@ -187,6 +187,10 @@ static const CGFloat kCaptureButtonVerticalInsetPhone = 10;
 
 - (BOOL)prefersStatusBarHidden {
     return YES;
+}
+
+-(NSUInteger)navigationControllerSupportedInterfaceOrientations:(UINavigationController *)navigationController {
+    return navigationController.topViewController.supportedInterfaceOrientations;
 }
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED < 90000

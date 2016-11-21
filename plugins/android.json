@@ -1,0 +1,25 @@
+{
+    "prepare_queue": {
+        "installed": [],
+        "uninstalled": []
+    },
+    "config_munge": {
+        "files": {}
+    },
+    "installed_plugins": {
+        "com.pgneri.plugin.custom.camera": {
+            "PACKAGE_NAME": "com.pgneri.example"
+        },
+        "com.pgneri.plugin.zbarcodescanner": {
+            "PACKAGE_NAME": "com.pgneri.example"
+        },
+        "cordova-plugin-whitelist": {
+            "PACKAGE_NAME": "com.pgneri.example"
+        }
+    },
+    "dependent_plugins": {
+        "cordova-plugin-compat": {
+            "PACKAGE_NAME": "com.pgneri.example"
+        }
+    }
+}
