@@ -96,7 +96,9 @@ var app = {
              "prompt" : "Place a barcode inside the scan area", // supported on Android only
              "formats" : "QR_CODE,PDF_417", // Android Only
              "orientation" : "landscape", //  default portrait
-             "flash" : "auto" // iOS only
+             "flash" : "auto", // iOS only
+             "titleButtonCancel":"Cancel Button" // iOS only
+
          }
       );
     }
