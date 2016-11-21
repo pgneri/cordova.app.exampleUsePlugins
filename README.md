@@ -1,4 +1,4 @@
-# cordova.app.exempleCustomCamera
+# cordova.app.exampleUsePlugins
 Cordova App exemple using plugin https://github.com/pgneri/plugin-camera-custom
 
 <p align="center"> <img src="https://cloud.githubusercontent.com/assets/15379047/18616137/e47c906c-7d8c-11e6-8606-005b6668895b.PNG" width="350"/>
